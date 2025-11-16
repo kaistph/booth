@@ -452,6 +452,16 @@
       color: #fff;
     }
 
+    .modal input[type="text"],
+    .modal input[type="password"],
+    .modal input[type="url"] {
+      border-radius: 0.8rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      width: 100%;
+    }
+
     .empty-state {
       border: 1px dashed rgba(0, 0, 0, 0.12);
       padding: 1rem;
@@ -554,6 +564,18 @@
     </form>
   </div>
 
+  <div class="modal-overlay" id="serverModalOverlay" role="dialog" aria-modal="true">
+    <form class="modal" id="serverForm">
+      <h4>Choose booth server</h4>
+      <p>Enter the full API base URL that every browser should use (leave blank to use this same origin).</p>
+      <input type="url" id="serverInput" placeholder="https://kultura-api.example.com" />
+      <div class="modal-actions">
+        <button type="button" class="cancel" id="serverCancelBtn">Cancel</button>
+        <button type="submit" class="confirm">Save</button>
+      </div>
+    </form>
+  </div>
+
   <script>
     const tabs = document.querySelectorAll('.tabs button');
     const forms = document.querySelectorAll('.auth-form');
@@ -627,6 +649,10 @@
     const connectionNote = document.getElementById('connectionNote');
     const connectionNoteText = document.getElementById('connectionNoteText');
     const changeServerBtn = document.getElementById('changeServerBtn');
+    const serverModalOverlay = document.getElementById('serverModalOverlay');
+    const serverForm = document.getElementById('serverForm');
+    const serverInput = document.getElementById('serverInput');
+    const serverCancelBtn = document.getElementById('serverCancelBtn');
 
     async function apiFetch(path, options = {}) {
       let response;
@@ -659,22 +685,60 @@
       connectionNote.classList.toggle('error', Boolean(isError));
     }
 
-    function promptForApiBase() {
+    function openServerModal() {
+      if (!serverModalOverlay || !serverInput) return promptForApiBaseFallback();
+      serverInput.value = API_BASE;
+      serverInput.placeholder = serverInput.placeholder || 'https://kultura-api.example.com';
+      serverModalOverlay.style.display = 'flex';
+      serverInput.focus();
+    }
+
+    function closeServerModal() {
+      if (serverModalOverlay) {
+        serverModalOverlay.style.display = 'none';
+      }
+      if (serverInput) {
+        serverInput.value = '';
+      }
+    }
+
+    function promptForApiBaseFallback() {
       const note = API_BASE ? `Current server: ${API_BASE}` : 'No remote server is set yet.';
       const message = `${note}\nEnter the full booth API base URL (e.g., https://kultura-api.example.com). Leave blank to use this same origin.`;
       const result = window.prompt(message, API_BASE);
       if (result === null) return;
-      const updated = setApiBase(result);
+      applyServerChange(result);
+    }
+
+    function applyServerChange(value) {
+      const updated = setApiBase(value);
       if (updated) {
         updateConnectionNote(`Connecting to booth server: ${updated}`);
       } else {
         updateConnectionNote('Using this same origin for booth requests.');
       }
+      closeServerModal();
       bootSequence();
     }
 
     if (changeServerBtn) {
-      changeServerBtn.addEventListener('click', promptForApiBase);
+      changeServerBtn.addEventListener('click', openServerModal);
+    }
+    if (serverCancelBtn) {
+      serverCancelBtn.addEventListener('click', closeServerModal);
+    }
+    if (serverModalOverlay) {
+      serverModalOverlay.addEventListener('click', (event) => {
+        if (event.target === serverModalOverlay) {
+          closeServerModal();
+        }
+      });
+    }
+    if (serverForm) {
+      serverForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        applyServerChange(serverInput?.value ?? '');
+      });
     }
 
     function setCurrentUser(user) {
