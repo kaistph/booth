@@ -37,31 +37,31 @@ BOOTH_DATA = [
         "id": "calamansi",
         "name": "Calamansi Relay",
         "description": "Balance a calamansi on a spoon and dash for your team!",
-        "password": "calamansiRun",
+        "password": "whyareurunning7",
     },
     {
         "id": "baybayin",
         "name": "Baybayin Calligraphy",
         "description": "Write your name using the pre-colonial Baybayin script.",
-        "password": "baybayinInk",
+        "password": "baybayink05",
     },
     {
         "id": "pamahiin",
         "name": "Pamahiin Quiz",
         "description": "Test your knowledge of Filipino superstitions and beliefs.",
-        "password": "swerteOnly",
+        "password": "swerteak0",
     },
     {
         "id": "maskara",
         "name": "Maskara Making",
         "description": "Design a colorful mask inspired by the MassKara Festival.",
-        "password": "maskaraArt",
+        "password": "maskar4rt",
     },
     {
         "id": "imahe",
-        "name": "Imahe Story Wall",
-        "description": "Contribute to the mural that tells stories from the islands.",
-        "password": "imaheTales",
+        "name": "Imahe ,
+        "description": "Pose with your maskara and post an instagram story tagging @kaist.one .",
+        "password": "imah3h3",
     },
 ]
 
