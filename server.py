@@ -10,7 +10,20 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "kultura.db"
+
+def resolve_db_path() -> Path:
+    env_value = os.environ.get("KULTURA_DB_PATH")
+    if env_value:
+        candidate = Path(env_value).expanduser()
+        if not candidate.is_absolute():
+            candidate = (BASE_DIR / candidate).resolve()
+    else:
+        candidate = BASE_DIR / "kultura.db"
+    candidate.parent.mkdir(parents=True, exist_ok=True)
+    return candidate
+
+
+DB_PATH = resolve_db_path()
 PORT = int(os.environ.get("PORT", 8000))
 
 BOOTH_DATA = [
@@ -263,6 +276,7 @@ def main() -> None:
     init_db()
     os.chdir(BASE_DIR)
     server = ThreadingHTTPServer(("", PORT), BoothRequestHandler)
+    print(f"Using database at {DB_PATH}")
     print(f"Serving Kultura Quest on http://localhost:{PORT}")
     server.serve_forever()
 

@@ -358,6 +358,49 @@
       border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
+    .connection-note {
+      margin: -0.4rem 0 1.4rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .connection-note::before {
+      content: '';
+      width: 0.65rem;
+      height: 0.65rem;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(13, 98, 108, 0.45);
+    }
+
+    .connection-note button {
+      border: none;
+      background: transparent;
+      color: var(--accent-dark);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .connection-note button:hover {
+      opacity: 0.85;
+    }
+
+    .connection-note.error {
+      color: var(--primary-dark);
+    }
+
+    .connection-note.error::before {
+      background: #d9534f;
+      box-shadow: 0 0 6px rgba(217, 83, 79, 0.45);
+    }
+
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -483,6 +526,10 @@
         <div class="notice" id="notice">
           Sign in and head to each booth. When you finish an activity, the booth organizer will enter their secret password to mark your passport.
         </div>
+        <p class="connection-note" id="connectionNote">
+          <span id="connectionNoteText">Connecting to booth server…</span>
+          <button type="button" id="changeServerBtn">Change server</button>
+        </p>
         <div class="progress-bar" aria-label="Overall progress">
           <span id="progressFill" style="width:0%"></span>
         </div>
@@ -508,45 +555,6 @@
   </div>
 
   <script>
-    const boothData = [
-      {
-        id: 'tumbang',
-        name: 'Tumbang Preso',
-        description: 'Knock down the lata with slippers in this classic Filipino street game.',
-        password: 'preso2024'
-      },
-      {
-        id: 'calamansi',
-        name: 'Calamansi Relay',
-        description: 'Balance a calamansi on a spoon and dash for your team!',
-        password: 'calamansiRun'
-      },
-      {
-        id: 'baybayin',
-        name: 'Baybayin Calligraphy',
-        description: 'Write your name using the pre-colonial Baybayin script.',
-        password: 'baybayinInk'
-      },
-      {
-        id: 'pamahiin',
-        name: 'Pamahiin Quiz',
-        description: 'Test your knowledge of Filipino superstitions and beliefs.',
-        password: 'swerteOnly'
-      },
-      {
-        id: 'maskara',
-        name: 'Maskara Making',
-        description: 'Design a colorful mask inspired by the MassKara Festival.',
-        password: 'maskaraArt'
-      },
-      {
-        id: 'imahe',
-        name: 'Imahe Story Wall',
-        description: 'Contribute to the mural that tells stories from the islands.',
-        password: 'imaheTales'
-      }
-    ];
-
     const tabs = document.querySelectorAll('.tabs button');
     const forms = document.querySelectorAll('.auth-form');
     tabs.forEach(btn => {
@@ -572,46 +580,110 @@
     const passwordInput = document.getElementById('boothPasswordInput');
     const cancelModal = document.getElementById('cancelModal');
 
+    const ACTIVE_USER_KEY = 'activeBoothUsername';
+    const API_BASE_STORAGE_KEY = 'kulturaApiBase';
+
+    function normalizeBaseUrl(input) {
+      if (!input || typeof input !== 'string') return '';
+      return input.trim().replace(/\/+$/, '');
+    }
+
+    let API_BASE = '';
+
+    function setApiBase(value) {
+      const normalized = normalizeBaseUrl(value);
+      API_BASE = normalized;
+      if (normalized) {
+        localStorage.setItem(API_BASE_STORAGE_KEY, normalized);
+      } else {
+        localStorage.removeItem(API_BASE_STORAGE_KEY);
+      }
+      return normalized;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const scriptApiBase = normalizeBaseUrl(window.KULTURA_API_BASE);
+    const queryApiBase = normalizeBaseUrl(params.get('api'));
+    const storedApiBase = normalizeBaseUrl(localStorage.getItem(API_BASE_STORAGE_KEY));
+    if (queryApiBase) {
+      setApiBase(queryApiBase);
+    } else if (scriptApiBase) {
+      setApiBase(scriptApiBase);
+    } else if (storedApiBase) {
+      setApiBase(storedApiBase);
+    } else {
+      setApiBase('');
+    }
+    if (queryApiBase) {
+      params.delete('api');
+      const newQuery = params.toString();
+      const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${window.location.hash}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+    let boothData = [];
+    let currentUser = null;
     let pendingBooth = null;
     let pendingCompletionState = true;
+    const connectionNote = document.getElementById('connectionNote');
+    const connectionNoteText = document.getElementById('connectionNoteText');
+    const changeServerBtn = document.getElementById('changeServerBtn');
 
-    const storage = {
-      get users() {
-        return JSON.parse(localStorage.getItem('boothUsers') || '[]');
-      },
-      set users(value) {
-        localStorage.setItem('boothUsers', JSON.stringify(value));
-      },
-      get activeUser() {
-        return JSON.parse(localStorage.getItem('activeBoothUser') || 'null');
-      },
-      set activeUser(value) {
-        if (!value) {
-          localStorage.removeItem('activeBoothUser');
-        } else {
-          localStorage.setItem('activeBoothUser', JSON.stringify(value));
-        }
+    async function apiFetch(path, options = {}) {
+      let response;
+      try {
+        response = await fetch(`${API_BASE}${path}`, {
+          headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+          ...options,
+        });
+      } catch (networkError) {
+        const suffix = API_BASE ? ` at ${API_BASE}` : '';
+        throw new Error(`Cannot reach the booth server${suffix}. Make sure it is running and accessible.`);
       }
-    };
-
-    function findUser(username) {
-      return storage.users.find(user => user.username.toLowerCase() === username.toLowerCase());
+      let payload = null;
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      if (isJson) {
+        payload = await response.json();
+      } else {
+        payload = await response.text();
+      }
+      if (!response.ok) {
+        const message = typeof payload === 'string' ? payload : payload?.error || 'Request failed';
+        throw new Error(message);
+      }
+      return payload;
     }
 
-    function saveUser(updatedUser) {
-      const users = storage.users;
-      const idx = users.findIndex(u => u.username === updatedUser.username);
-      if (idx !== -1) {
-        users[idx] = updatedUser;
-        storage.users = users;
-      }
-      if (storage.activeUser?.username === updatedUser.username) {
-        storage.activeUser = updatedUser;
-      }
+    function updateConnectionNote(message, isError = false) {
+      if (!connectionNote || !connectionNoteText) return;
+      connectionNoteText.textContent = message;
+      connectionNote.classList.toggle('error', Boolean(isError));
     }
 
-    function setLoggedInUser(user) {
-      storage.activeUser = user;
+    function promptForApiBase() {
+      const note = API_BASE ? `Current server: ${API_BASE}` : 'No remote server is set yet.';
+      const message = `${note}\nEnter the full booth API base URL (e.g., https://kultura-api.example.com). Leave blank to use this same origin.`;
+      const result = window.prompt(message, API_BASE);
+      if (result === null) return;
+      const updated = setApiBase(result);
+      if (updated) {
+        updateConnectionNote(`Connecting to booth server: ${updated}`);
+      } else {
+        updateConnectionNote('Using this same origin for booth requests.');
+      }
+      bootSequence();
+    }
+
+    if (changeServerBtn) {
+      changeServerBtn.addEventListener('click', promptForApiBase);
+    }
+
+    function setCurrentUser(user) {
+      currentUser = user;
+      if (user) {
+        localStorage.setItem(ACTIVE_USER_KEY, user.username);
+      } else {
+        localStorage.removeItem(ACTIVE_USER_KEY);
+      }
       renderDashboard();
     }
 
@@ -639,12 +711,12 @@
     }
 
     function renderDashboard() {
-      const user = storage.activeUser;
+      const user = currentUser;
       renderBoothCards(user);
       if (!user) {
         userInfo.innerHTML = '<strong>Guests, sign in to begin!</strong><span>No account is currently active.</span>';
         notice.textContent = 'Sign in and head to each booth. When you finish an activity, the booth organizer will enter their secret password to mark your passport.';
-        progressText.textContent = '0 of 6 booths completed';
+        progressText.textContent = boothData.length ? `0 of ${boothData.length} booths completed` : 'Loading booths...';
         progressFill.style.width = '0%';
         logoutBtn.disabled = true;
         csvBtn.disabled = true;
@@ -654,72 +726,91 @@
       userInfo.innerHTML = `<strong>Welcome, ${user.name}!</strong><span>@${user.username} · ${user.email}</span>`;
       notice.textContent = 'Visit each booth and ask an organizer to enter their password once you finish the activity.';
       progressText.textContent = `${completed} of ${boothData.length} booths completed`;
-      progressFill.style.width = `${(completed / boothData.length) * 100}%`;
+      progressFill.style.width = boothData.length ? `${(completed / boothData.length) * 100}%` : '0%';
       logoutBtn.disabled = false;
       csvBtn.disabled = false;
     }
 
-    function registerUser(event) {
+    async function loadBooths() {
+      try {
+        const data = await apiFetch('/api/booths');
+        boothData = data.booths || [];
+        const baseLabel = API_BASE ? API_BASE : 'this same server';
+        updateConnectionNote(`Connected to booth server: ${baseLabel}`);
+      } catch (error) {
+        console.error('Booth load error', error);
+        notice.textContent = 'We could not load booth data. Please refresh and try again.';
+        boothData = [];
+        updateConnectionNote(error.message || 'Unable to reach the booth server.', true);
+      }
+      renderBoothCards(currentUser);
+    }
+
+    async function registerUser(event) {
       event.preventDefault();
       const name = document.getElementById('reg-name').value.trim();
       const username = document.getElementById('reg-username').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value.trim();
       const message = document.getElementById('registerMessage');
+      message.style.color = 'var(--primary-dark)';
       message.textContent = '';
 
       if (!name || !username || !email || !password) {
         message.textContent = 'Please fill in every field.';
         return;
       }
-      const usernameExists = storage.users.some(user => user.username.toLowerCase() === username.toLowerCase());
-      if (usernameExists) {
-        message.textContent = 'That username is already taken.';
-        return;
+
+      try {
+        await apiFetch('/api/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, username, email, password })
+        });
+        message.style.color = 'var(--success)';
+        message.textContent = 'Success! You can now log in.';
+        document.getElementById('registerForm').reset();
+      } catch (error) {
+        message.textContent = error.message;
       }
-      const emailExists = storage.users.some(user => user.email.toLowerCase() === email.toLowerCase());
-      if (emailExists) {
-        message.textContent = 'That email is already registered.';
-        return;
-      }
-      const newUser = { name, username, email, password, completions: {} };
-      storage.users = [...storage.users, newUser];
-      message.style.color = 'var(--success)';
-      message.textContent = 'Success! You can now log in.';
-      (document.getElementById('registerForm')).reset();
     }
 
-    function loginUser(event) {
+    async function loginUser(event) {
       event.preventDefault();
       const username = document.getElementById('login-username').value.trim();
       const password = document.getElementById('login-password').value.trim();
       const message = document.getElementById('loginMessage');
+      message.style.color = 'var(--primary-dark)';
       message.textContent = '';
-      const user = findUser(username);
-      if (!user || user.password !== password) {
-        message.textContent = 'Invalid credentials. Please try again.';
-        return;
+
+      try {
+        const data = await apiFetch('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        });
+        message.style.color = 'var(--success)';
+        message.textContent = 'Welcome back!';
+        document.getElementById('loginForm').reset();
+        setCurrentUser(data.user);
+      } catch (error) {
+        message.textContent = error.message;
       }
-      message.style.color = 'var(--success)';
-      message.textContent = 'Welcome back!';
-      (document.getElementById('loginForm')).reset();
-      setLoggedInUser(user);
     }
 
     function logout() {
-      storage.activeUser = null;
-      renderDashboard();
+      setCurrentUser(null);
     }
 
     function openPasswordModal(boothId, markComplete) {
       pendingBooth = boothId;
       pendingCompletionState = markComplete;
       const booth = boothData.find(b => b.id === boothId);
+      if (!booth) return;
       modalTitle.textContent = `${markComplete ? 'Complete' : 'Reset'} ${booth.name}`;
       modalDescription.textContent = markComplete
         ? 'Ask the booth organizer to enter their password to mark this activity as complete.'
         : 'Only booth organizers should reset a completion.';
       passwordInput.value = '';
+      passwordInput.placeholder = 'Booth password';
       modalOverlay.style.display = 'flex';
       passwordInput.focus();
     }
@@ -727,34 +818,32 @@
     function closePasswordModal() {
       modalOverlay.style.display = 'none';
       pendingBooth = null;
+      passwordInput.value = '';
     }
 
-    function updateBoothStatus(event) {
+    async function updateBoothStatus(event) {
       event.preventDefault();
-      if (!pendingBooth) return;
-      const booth = boothData.find(b => b.id === pendingBooth);
-      const user = storage.activeUser;
-      if (!booth || !user) return;
-      const entered = passwordInput.value.trim();
-      if (entered !== booth.password) {
+      if (!pendingBooth || !currentUser) return;
+      try {
+        const data = await apiFetch(`/api/users/${encodeURIComponent(currentUser.username)}/completions`, {
+          method: 'POST',
+          body: JSON.stringify({
+            boothId: pendingBooth,
+            completed: pendingCompletionState,
+            boothPassword: passwordInput.value.trim()
+          })
+        });
+        closePasswordModal();
+        setCurrentUser(data.user);
+      } catch (error) {
         passwordInput.value = '';
-        passwordInput.placeholder = 'Incorrect password, try again';
-        return;
+        passwordInput.placeholder = error.message || 'Incorrect password, try again';
       }
-      user.completions = user.completions || {};
-      if (pendingCompletionState) {
-        user.completions[booth.id] = true;
-      } else {
-        delete user.completions[booth.id];
-      }
-      saveUser(user);
-      closePasswordModal();
-      renderDashboard();
     }
 
     function downloadCsv() {
-      const user = storage.activeUser;
-      if (!user) return;
+      const user = currentUser;
+      if (!user || !boothData.length) return;
       const rows = [
         ['Booth', 'Status'],
         ...boothData.map(booth => [booth.name, user.completions?.[booth.id] ? 'Completed' : 'Incomplete'])
@@ -769,6 +858,23 @@
       URL.revokeObjectURL(url);
     }
 
+    async function restoreSession() {
+      const storedUsername = localStorage.getItem(ACTIVE_USER_KEY);
+      if (!storedUsername) {
+        renderDashboard();
+        return;
+      }
+      try {
+        const data = await apiFetch(`/api/users/${encodeURIComponent(storedUsername)}`);
+        setCurrentUser(data.user);
+      } catch (error) {
+        console.warn('Session restore failed', error);
+        localStorage.removeItem(ACTIVE_USER_KEY);
+        updateConnectionNote(error.message || 'Unable to reach the booth server.', true);
+        renderDashboard();
+      }
+    }
+
     document.getElementById('registerForm').addEventListener('submit', registerUser);
     document.getElementById('loginForm').addEventListener('submit', loginUser);
     logoutBtn.addEventListener('click', logout);
@@ -781,7 +887,19 @@
     });
     statusForm.addEventListener('submit', updateBoothStatus);
 
-    renderDashboard();
+    async function bootSequence() {
+      try {
+        await loadBooths();
+        await restoreSession();
+      } catch (error) {
+        console.error('Initialization error', error);
+        updateConnectionNote(error.message || 'Unable to reach the booth server.', true);
+        renderDashboard();
+      }
+    }
+
+    bootSequence();
   </script>
+
 </body>
 </html>

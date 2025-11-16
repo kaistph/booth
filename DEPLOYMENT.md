@@ -11,7 +11,10 @@ so every browser shares the same records.
 3. Open `http://localhost:8000` in any browser. The same origin serves both the
    static files and the JSON API, so no extra configuration is required.
 4. Stop and restart the process whenever you need—the `kultura.db` file keeps
-   everyone’s progress until you delete it manually.
+   everyone’s progress until you delete it manually. You can change where this
+   file lives by exporting `KULTURA_DB_PATH=/absolute/or/relative/location.db`
+   before launching the server (perfect for pointing multiple hosts at a shared
+   network volume).
 
 ## Hosting the API elsewhere
 If you deploy `server.py` on a public host (Render, Railway, Fly.io, a VPS, etc.)
@@ -19,10 +22,14 @@ you can keep your static site on GitHub Pages and simply point the browser to th
 remote API:
 
 1. Deploy the Python server and note its base URL (for example,
-   `https://kultura-api.example.com`).
+   `https://kultura-api.example.com`). The included `Dockerfile` and
+   `docker-compose.yml` (see `DOCKER.md`) make it easy to run the API on a VPS
+   with a persistent `data/` volume so every visitor shares the exact same
+   SQLite database.
 2. Open the front end and append `?api=https://kultura-api.example.com` to the
-   URL once. The page stores that base URL in `localStorage`, cleans up the query
-   string, and uses it for all future requests in that browser.
+   URL once **or** click the new “Change server” link inside the dashboard. The
+   page stores that base URL in `localStorage`, cleans up the query string, and
+   uses it for all future requests in that browser.
 3. Repeat step 2 in each browser/device that needs to talk to the hosted API.
 
 ### Alternate configuration methods
