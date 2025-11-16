@@ -1,0 +1,7 @@
+.git
+__pycache__/
+*.pyc
+kultura.db
+*.db
+node_modules/
+data/
