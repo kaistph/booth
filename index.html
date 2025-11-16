@@ -1,1 +1,775 @@
-#nothing
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kultura Quest Booth Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fff6e4;
+      --bg-sand: #f9d188;
+      --card: rgba(255, 255, 255, 0.94);
+      --primary: #dd7c26;
+      --primary-dark: #b25f1c;
+      --accent: #1d8d97;
+      --accent-dark: #0e6670;
+      --text: #3a2a1a;
+      --muted: #806241;
+      --success: #218a6b;
+      --shadow: 0 25px 60px rgba(58, 43, 26, 0.15);
+      --wave: #56c5ca;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, #ffe7be 45%, #fff9ed 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      position: relative;
+      background: linear-gradient(180deg, rgba(7, 37, 48, 0.15), rgba(7, 37, 48, 0.65)),
+        url('backdrop.png') center/cover no-repeat;
+      color: #fff;
+      padding: 3rem 1rem 4rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 60px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.6));
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      letter-spacing: 0.1em;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      letter-spacing: 0.05em;
+      text-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+    }
+
+    header p {
+      margin-top: 0.75rem;
+      font-size: 1rem;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .hero-note {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: -3rem auto 3rem;
+      padding: 0 1rem 3rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 1.25rem;
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(6px);
+    }
+
+    .auth-panel h2,
+    .dashboard h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .tabs button {
+      background: transparent;
+      border: none;
+      padding: 0.65rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--muted);
+    }
+
+    .tabs button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .auth-form {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .auth-form.active {
+      display: flex;
+    }
+
+    .auth-form label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .auth-form input {
+      border-radius: 0.85rem;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .auth-form button {
+      padding: 0.9rem 1.2rem;
+      border-radius: 0.85rem;
+      border: none;
+      background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 25px rgba(29, 141, 151, 0.35);
+    }
+
+    .auth-form button:hover {
+      transform: translateY(-2px);
+    }
+
+    .message {
+      font-size: 0.85rem;
+      color: var(--primary-dark);
+      min-height: 1rem;
+    }
+
+    .dashboard-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .user-info strong {
+      font-size: 1.1rem;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .user-actions button {
+      border-radius: 999px;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .user-actions button:hover {
+      transform: translateY(-1px);
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--text);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .csv-btn {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(13, 89, 98, 0.25);
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: rgba(0, 0, 0, 0.07);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 0.65rem;
+    }
+
+    .progress-bar span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(120deg, var(--accent), var(--primary));
+      transition: width 0.3s ease;
+    }
+
+    .booths-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+
+    .booth-card {
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 1.1rem;
+      padding: 1.25rem;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), #fff 70%, rgba(255, 255, 255, 0.85)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 100%),
+        linear-gradient(180deg, rgba(249, 209, 136, 0.18), rgba(255, 255, 255, 0));
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      min-height: 220px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .booth-card::after {
+      content: '';
+      position: absolute;
+      inset: auto -40% 0 -40%;
+      height: 60px;
+      background: radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.8), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.8), transparent 55%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .booth-card h3 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .booth-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .status-chip {
+      align-self: flex-start;
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-chip.complete {
+      background: rgba(16, 128, 111, 0.15);
+      color: var(--success);
+    }
+
+    .status-chip.incomplete {
+      background: rgba(221, 124, 38, 0.15);
+      color: var(--primary-dark);
+    }
+
+    .booth-card button {
+      margin-top: auto;
+      border-radius: 0.85rem;
+      border: none;
+      padding: 0.8rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .booth-card button.complete-btn {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(18, 114, 123, 0.3);
+    }
+
+    .booth-card button.reset-btn {
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .booth-card button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .notice {
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 0.75rem 1rem;
+      border-radius: 0.9rem;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+    }
+
+    .modal {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .modal h4 {
+      margin: 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .modal-actions button {
+      border-radius: 0.7rem;
+      border: none;
+      padding: 0.65rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .modal-actions .cancel {
+      background: #efefef;
+    }
+
+    .modal-actions .confirm {
+      background: linear-gradient(120deg, var(--accent), var(--primary));
+      color: #fff;
+    }
+
+    .empty-state {
+      border: 1px dashed rgba(0, 0, 0, 0.12);
+      padding: 1rem;
+      border-radius: 1rem;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="hero-badge">Kaistone Philippines</p>
+    <h1>Baybayin: The Island Journey</h1>
+    <p class="hero-note">Baybayin has multiple meanings depending on how you say it.</p>
+    <p>Log in to your passport, explore six cultural booths, and ask every organizer to unlock their station once you finish their activity.</p>
+  </header>
+  <main>
+    <div class="layout">
+      <section class="auth-panel card">
+        <h2>Join or Return</h2>
+        <div class="tabs">
+          <button class="active" data-target="login">Login</button>
+          <button data-target="register">Register</button>
+        </div>
+        <form id="loginForm" class="auth-form active">
+          <div>
+            <label for="login-username">Username</label>
+            <input id="login-username" type="text" required placeholder="mabuhayfan" />
+          </div>
+          <div>
+            <label for="login-password">Password</label>
+            <input id="login-password" type="password" required placeholder="••••••" />
+          </div>
+          <button type="submit">Enter Event Passport</button>
+          <div class="message" id="loginMessage"></div>
+        </form>
+
+        <form id="registerForm" class="auth-form">
+          <div>
+            <label for="reg-name">Full Name</label>
+            <input id="reg-name" type="text" required placeholder="Juan Dela Cruz" />
+          </div>
+          <div>
+            <label for="reg-username">Preferred Username</label>
+            <input id="reg-username" type="text" required placeholder="juanderer" />
+          </div>
+          <div>
+            <label for="reg-email">Email</label>
+            <input id="reg-email" type="email" required placeholder="you@example.com" />
+          </div>
+          <div>
+            <label for="reg-password">Password</label>
+            <input id="reg-password" type="password" required placeholder="Create a password" />
+          </div>
+          <button type="submit">Create Passport</button>
+          <div class="message" id="registerMessage"></div>
+        </form>
+      </section>
+
+      <section class="dashboard card">
+        <div class="dashboard-header">
+          <div class="user-info" id="userInfo">
+            <strong>Guests, sign in to begin!</strong>
+            <span>No account is currently active.</span>
+          </div>
+          <div class="user-actions">
+            <button class="logout-btn" id="logoutBtn" type="button">Log out</button>
+            <button class="csv-btn" id="csvBtn" type="button">Download progress CSV</button>
+          </div>
+        </div>
+        <div class="notice" id="notice">
+          Sign in and head to each booth. When you finish an activity, the booth organizer will enter their secret password to mark your passport.
+        </div>
+        <div class="progress-bar" aria-label="Overall progress">
+          <span id="progressFill" style="width:0%"></span>
+        </div>
+        <p id="progressText" style="margin-top:0.5rem; font-weight:600;">0 of 6 booths completed</p>
+        <div class="booths-grid" id="boothContainer"></div>
+        <div class="empty-state" id="emptyState" hidden>
+          You need to log in before booth buttons become active.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <form class="modal" id="statusForm">
+      <h4 id="modalTitle">Update Booth Status</h4>
+      <p id="modalDescription">Only booth organizers should enter passwords.</p>
+      <input type="password" id="boothPasswordInput" placeholder="Booth password" required />
+      <div class="modal-actions">
+        <button type="button" class="cancel" id="cancelModal">Cancel</button>
+        <button type="submit" class="confirm">Confirm</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tabs button');
+    const forms = document.querySelectorAll('.auth-form');
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        forms.forEach(form => form.classList.toggle('active', form.id === btn.dataset.target + 'Form'));
+      });
+    });
+
+    const boothContainer = document.getElementById('boothContainer');
+    const emptyState = document.getElementById('emptyState');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const notice = document.getElementById('notice');
+    const userInfo = document.getElementById('userInfo');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const csvBtn = document.getElementById('csvBtn');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const statusForm = document.getElementById('statusForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+    const passwordInput = document.getElementById('boothPasswordInput');
+    const cancelModal = document.getElementById('cancelModal');
+
+    const API_BASE = window.KULTURA_API_BASE || '';
+    const ACTIVE_USER_KEY = 'activeBoothUsername';
+    let boothData = [];
+    let currentUser = null;
+    let pendingBooth = null;
+    let pendingCompletionState = true;
+
+    async function apiFetch(path, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        ...options,
+      });
+      let payload = null;
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      if (isJson) {
+        payload = await response.json();
+      } else {
+        payload = await response.text();
+      }
+      if (!response.ok) {
+        const message = typeof payload === 'string' ? payload : payload?.error || 'Request failed';
+        throw new Error(message);
+      }
+      return payload;
+    }
+
+    function setCurrentUser(user) {
+      currentUser = user;
+      if (user) {
+        localStorage.setItem(ACTIVE_USER_KEY, user.username);
+      } else {
+        localStorage.removeItem(ACTIVE_USER_KEY);
+      }
+      renderDashboard();
+    }
+
+    function renderBoothCards(user) {
+      boothContainer.innerHTML = '';
+      boothData.forEach(booth => {
+        const card = document.createElement('article');
+        card.className = 'booth-card';
+        const completed = Boolean(user?.completions?.[booth.id]);
+        card.innerHTML = `
+          <div class="status-chip ${completed ? 'complete' : 'incomplete'}">${completed ? 'Completed' : 'Incomplete'}</div>
+          <h3>${booth.name}</h3>
+          <p>${booth.description}</p>
+        `;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = completed ? 'Reset to incomplete' : 'Mark as completed';
+        btn.className = completed ? 'reset-btn' : 'complete-btn';
+        btn.disabled = !user;
+        btn.addEventListener('click', () => openPasswordModal(booth.id, !completed));
+        card.appendChild(btn);
+        boothContainer.appendChild(card);
+      });
+      emptyState.hidden = Boolean(user);
+    }
+
+    function renderDashboard() {
+      const user = currentUser;
+      renderBoothCards(user);
+      if (!user) {
+        userInfo.innerHTML = '<strong>Guests, sign in to begin!</strong><span>No account is currently active.</span>';
+        notice.textContent = 'Sign in and head to each booth. When you finish an activity, the booth organizer will enter their secret password to mark your passport.';
+        progressText.textContent = boothData.length ? `0 of ${boothData.length} booths completed` : 'Loading booths...';
+        progressFill.style.width = '0%';
+        logoutBtn.disabled = true;
+        csvBtn.disabled = true;
+        return;
+      }
+      const completed = boothData.filter(booth => user.completions?.[booth.id]).length;
+      userInfo.innerHTML = `<strong>Welcome, ${user.name}!</strong><span>@${user.username} · ${user.email}</span>`;
+      notice.textContent = 'Visit each booth and ask an organizer to enter their password once you finish the activity.';
+      progressText.textContent = `${completed} of ${boothData.length} booths completed`;
+      progressFill.style.width = boothData.length ? `${(completed / boothData.length) * 100}%` : '0%';
+      logoutBtn.disabled = false;
+      csvBtn.disabled = false;
+    }
+
+    async function loadBooths() {
+      try {
+        const data = await apiFetch('/api/booths');
+        boothData = data.booths || [];
+      } catch (error) {
+        console.error('Booth load error', error);
+        notice.textContent = 'We could not load booth data. Please refresh and try again.';
+        boothData = [];
+      }
+      renderBoothCards(currentUser);
+    }
+
+    async function registerUser(event) {
+      event.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const username = document.getElementById('reg-username').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const message = document.getElementById('registerMessage');
+      message.style.color = 'var(--primary-dark)';
+      message.textContent = '';
+
+      if (!name || !username || !email || !password) {
+        message.textContent = 'Please fill in every field.';
+        return;
+      }
+
+      try {
+        await apiFetch('/api/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, username, email, password })
+        });
+        message.style.color = 'var(--success)';
+        message.textContent = 'Success! You can now log in.';
+        document.getElementById('registerForm').reset();
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    async function loginUser(event) {
+      event.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const message = document.getElementById('loginMessage');
+      message.style.color = 'var(--primary-dark)';
+      message.textContent = '';
+
+      try {
+        const data = await apiFetch('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        });
+        message.style.color = 'var(--success)';
+        message.textContent = 'Welcome back!';
+        document.getElementById('loginForm').reset();
+        setCurrentUser(data.user);
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    function logout() {
+      setCurrentUser(null);
+    }
+
+    function openPasswordModal(boothId, markComplete) {
+      pendingBooth = boothId;
+      pendingCompletionState = markComplete;
+      const booth = boothData.find(b => b.id === boothId);
+      if (!booth) return;
+      modalTitle.textContent = `${markComplete ? 'Complete' : 'Reset'} ${booth.name}`;
+      modalDescription.textContent = markComplete
+        ? 'Ask the booth organizer to enter their password to mark this activity as complete.'
+        : 'Only booth organizers should reset a completion.';
+      passwordInput.value = '';
+      passwordInput.placeholder = 'Booth password';
+      modalOverlay.style.display = 'flex';
+      passwordInput.focus();
+    }
+
+    function closePasswordModal() {
+      modalOverlay.style.display = 'none';
+      pendingBooth = null;
+      passwordInput.value = '';
+    }
+
+    async function updateBoothStatus(event) {
+      event.preventDefault();
+      if (!pendingBooth || !currentUser) return;
+      try {
+        const data = await apiFetch(`/api/users/${encodeURIComponent(currentUser.username)}/completions`, {
+          method: 'POST',
+          body: JSON.stringify({
+            boothId: pendingBooth,
+            completed: pendingCompletionState,
+            boothPassword: passwordInput.value.trim()
+          })
+        });
+        closePasswordModal();
+        setCurrentUser(data.user);
+      } catch (error) {
+        passwordInput.value = '';
+        passwordInput.placeholder = error.message || 'Incorrect password, try again';
+      }
+    }
+
+    function downloadCsv() {
+      const user = currentUser;
+      if (!user || !boothData.length) return;
+      const rows = [
+        ['Booth', 'Status'],
+        ...boothData.map(booth => [booth.name, user.completions?.[booth.id] ? 'Completed' : 'Incomplete'])
+      ];
+      const csvContent = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${user.username}-kultura-progress.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function restoreSession() {
+      const storedUsername = localStorage.getItem(ACTIVE_USER_KEY);
+      if (!storedUsername) {
+        renderDashboard();
+        return;
+      }
+      try {
+        const data = await apiFetch(`/api/users/${encodeURIComponent(storedUsername)}`);
+        setCurrentUser(data.user);
+      } catch (error) {
+        console.warn('Session restore failed', error);
+        localStorage.removeItem(ACTIVE_USER_KEY);
+        renderDashboard();
+      }
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', registerUser);
+    document.getElementById('loginForm').addEventListener('submit', loginUser);
+    logoutBtn.addEventListener('click', logout);
+    csvBtn.addEventListener('click', downloadCsv);
+    cancelModal.addEventListener('click', closePasswordModal);
+    modalOverlay.addEventListener('click', (event) => {
+      if (event.target === modalOverlay) {
+        closePasswordModal();
+      }
+    });
+    statusForm.addEventListener('submit', updateBoothStatus);
+
+    loadBooths().then(restoreSession).catch(error => {
+      console.error('Initialization error', error);
+      renderDashboard();
+    });
+  </script>
+
+</body>
+</html>
