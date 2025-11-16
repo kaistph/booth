@@ -1,0 +1,52 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fce7a1" />
+      <stop offset="45%" stop-color="#f7c356" />
+      <stop offset="100%" stop-color="#f0a13a" />
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.15" r="0.4">
+      <stop offset="0%" stop-color="#fff6c5" />
+      <stop offset="100%" stop-color="rgba(255,214,112,0)" />
+    </radialGradient>
+    <linearGradient id="cliff" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#305142" />
+      <stop offset="100%" stop-color="#1b352c" />
+    </linearGradient>
+    <linearGradient id="wave1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5ad2d6" />
+      <stop offset="100%" stop-color="#36a6ad" />
+    </linearGradient>
+    <linearGradient id="wave2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3eb5ba" />
+      <stop offset="100%" stop-color="#197f88" />
+    </linearGradient>
+    <linearGradient id="boat" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fce6c3" />
+      <stop offset="100%" stop-color="#b87132" />
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)" />
+  <rect width="1600" height="900" fill="url(#sun)" />
+  <g opacity="0.4">
+    <path d="M0 450 Q120 390 200 440 T400 430 T600 450 T800 430 T1000 450 T1200 440 T1400 450 T1600 420 V900 H0Z" fill="#6ac4cb" />
+    <path d="M0 500 Q180 460 330 500 T700 480 T1100 510 T1600 480 V900 H0Z" fill="#4aa9b0" />
+  </g>
+  <g>
+    <path d="M0 520 Q200 470 360 520 T760 500 T1080 540 T1600 520 V900 H0Z" fill="url(#wave1)" />
+    <path d="M0 610 Q180 560 360 600 T760 580 T1100 620 T1600 600 V900 H0Z" fill="url(#wave2)" />
+    <path d="M0 700 Q200 660 360 700 T760 680 T1100 720 T1600 700 V900 H0Z" fill="#0f5c68" />
+  </g>
+  <g opacity="0.9">
+    <path d="M-40 320 Q80 260 160 360 T260 260 T360 360 T460 240 T540 360 L540 900 H-40Z" fill="url(#cliff)" />
+    <path d="M1340 320 Q1400 260 1500 340 T1600 260 V900 H1280Z" fill="url(#cliff)" />
+  </g>
+  <g transform="translate(600 430)">
+    <path d="M0 80 L280 0 L520 80 L520 110 L0 110Z" fill="url(#boat)" stroke="#3d1e0b" stroke-width="4" />
+    <path d="M40 90 L60 10" stroke="#3d1e0b" stroke-width="5" />
+    <path d="M460 90 L440 10" stroke="#3d1e0b" stroke-width="5" />
+    <path d="M60 10 L260 40 L440 10" stroke="#3d1e0b" stroke-width="4" fill="none" />
+    <path d="M250 -20 L260 40" stroke="#3d1e0b" stroke-width="4" />
+    <path d="M260 40 L230 30" stroke="#3d1e0b" stroke-width="4" />
+  </g>
+</svg>
